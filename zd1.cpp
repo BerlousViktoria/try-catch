@@ -1,0 +1,190 @@
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <cmath> 
+#include <limits> 
+#define NOMINMAX
+#include <windows.h> 
+using namespace std;
+
+// додано вивід помилки окремим кіном (як вказано у прикладі)
+void ShowErrorWindow(const string& message) {
+    MessageBoxA(NULL, message.c_str(), "Помилка вводу", MB_ICONERROR | MB_OK);
+}
+
+class Valuta
+{
+private:
+    string type;
+    double selling;
+    double buying;
+public:
+    Valuta(string tt, double by, double pr)
+        : type(tt), buying(by), selling(pr) {
+    }
+    string getType() const {
+        return type;
+    }
+
+    double getBuying() const {
+        return buying;
+    }
+
+    double getSelling() const {
+        return selling;
+    }
+    void setType(string newType) {
+        type = newType;
+    }
+    void setBuying(double newBuying) {
+        if (newBuying >= 0 && newBuying <= selling) {
+            buying = newBuying;
+        }
+        else {
+            cout << "Помилка: Купівля повинна бути невід'ємною і меншою або дорівнювати продажу (" << selling << ")." << endl;
+        }
+    }
+    void setSelling(double newSelling) {
+        if (newSelling >= buying) {
+            selling = newSelling;
+        }
+        else {
+            cout << "Помилка: Продаж має бути більшим або дорівнювати купівлі (" << buying << ")." << endl;
+        }
+    }
+
+    // ----- зображений попередній вигляд функції Input() ----
+    //void Input()
+    //{
+    //    bool correct_input = false;
+    //    while (!correct_input) {
+    //        cout << "\n\nВведіть тип валюти : ";
+    //        cin >> type;
+    //        cout << "Введіть купівлю : ";
+    //        cin >> buying;
+    //        cout << "Введіть продаж : ";
+    //        cin >> selling;
+    //        if (selling < buying) {
+    //            cout << "Продаж має бути більшим за купівлю. Перевірте правильність вводу." << endl;
+    //        }
+    //        else if (selling < 0 || buying < 0) {
+    //            cout << "Значення повинні бути додатніми. Перевірте правильність вводу." << endl;
+    //        }
+    //        else {
+    //            correct_input = true;
+    //        }
+    //    }
+    //}
+    // ---- її оновлений вигляд із використанням перевірки помилок -----
+
+    void Input() {
+        bool correct_input = false;
+        while (!correct_input) {
+            try {
+                cout << "\n Введіть тип валюти: ";
+                cin >> type;
+                cout << "Введіть купівлю: ";
+                if (!(cin >> buying)) {
+                    throw string("Неправильний тип введення! Потрібно писати цифрами. ");
+                }
+                cout << "Введіть продаж: ";
+                if (!(cin >> selling)) {
+                    throw string("Неправильний тип введення! Потрібно писати цифрами. ");
+                }
+                if (selling < 0 || buying < 0) {
+                    throw string("Значення повинні бути додатніми. Перевірте правильність вводу.");
+                }
+                if (selling < buying) {
+                    throw string("Продаж має бути більшим за купівлю. Перевірте правильність вводу.");
+                }
+
+                correct_input = true;
+            }
+            catch (string error) {
+                ShowErrorWindow(error);
+
+                if (cin.fail()) {
+                    cin.clear();
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                }
+            }
+
+        }
+    }
+
+    void Output()
+    {
+        cout << "Тип - " << type
+            << ", Купівля - " << buying
+            << ", Продаж - " << selling
+            << ", Маржа (різниця) - " << Diff() << endl;
+    }
+
+    double Diff()
+    {
+        return abs(selling - buying);
+    }
+};
+
+class BankValuta : public Valuta
+{
+private:
+    string bankName;
+
+public:
+    BankValuta(string tt, double by, double pr, string bn)
+        : Valuta(tt, by, pr), bankName(bn) {
+    }
+
+    string getBankName() const {
+        return bankName;
+    }
+
+    void setBankName(string newBankName) {
+        bankName = newBankName;
+    }
+
+    void Output()
+    {
+        Valuta::Output();
+        cout << "Банк - " << bankName << endl;
+    }
+};
+
+int main()
+{
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+
+    //Valuta first("Долар", 35.50, 41.20);
+    //cout << "--- Тест Valuta ---" << endl;
+    //first.Output();
+
+    //cout << "\n--- Тест Сеттерів ---" << endl;
+    //first.setBuying(36.00);
+    //first.setSelling(42.50);
+    //first.setType("Євро");
+    //first.Output();
+
+    //cout << "\n--- Тест Геттерів ---" << endl;
+    //cout << "Поточна ціна продажу: " << first.getSelling() << endl;
+
+    //cout << "\n--- Тест BankValuta ---" << endl;
+    //BankValuta firstfirst("Злотий", 9.50, 10.50, "ПриватБанк");
+    //firstfirst.Output();
+
+    //firstfirst.setBankName("Ощадбанк");
+    //cout << "\nЗміна банку:" << endl;
+    //firstfirst.Output();
+
+
+    // -- перевірка помилок --
+    cout << "--- Тестування помилок ---" << endl;
+    Valuta test("Тест", 0, 0);
+    test.Input();
+    cout << "-- Результат --" << endl;
+    test.Output();
+
+    cout << endl << endl;
+    system("pause");
+}
